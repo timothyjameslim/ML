@@ -33,7 +33,6 @@ print(duplicates, "\n--------- The above duplicated data has been removed ------
 # remove the duplicated data
 ds.drop_duplicates(inplace=True)
 
-
 # this will split the dataset into train and test (80/20)
 x_train, x_test = train_test_split(ds, test_size=0.2, train_size=0.8, random_state=0)
 # print("x_train: \n", x_train)
@@ -76,6 +75,9 @@ plt.show()
 # of the Iris alone, with Petal Width to support the decisions.
 
 # KNN Starts here :)
+
+#Normalize data
+
 
 
 #need to normalize data first!!!!!!!!!!!!!!!!
