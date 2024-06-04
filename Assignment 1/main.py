@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # load the csv here (ds = dataset)
 ds = pd.read_csv("Iris_Assignment 1.csv", header=0, index_col=0)
@@ -33,35 +34,30 @@ print(duplicates, "\n--------- The above duplicated data has been removed ------
 # remove the duplicated data
 ds.drop_duplicates(inplace=True)
 
-# this will split the dataset into train and test (80/20)
-x_train, x_test = train_test_split(ds, test_size=0.2, train_size=0.8, random_state=0)
-# print("x_train: \n", x_train)
-# print("x_test: \n", x_test)
-# print("x_train.shape: ", x_train.shape)
-# print("x_test.shape: ", x_test.shape)
-
 # Question 2
-x_train.boxplot()
+ds.boxplot()
 plt.savefig('boxplot.jpg', format='jpg')
 # plt.show()
 # 2a) boxplot plots the outliers as circles within the diagram.
 # 2b) The diagram shows 4 outliers within the sepalWidthCm.
 
 # Question 3
+plt.figure()
 sns.set_style("ticks")
-sns.pairplot(x_train, hue="Species")
+sns.pairplot(ds, hue="Species")
 plt.savefig('scatter.jpg', format='jpg')
-plt.show()
+# plt.show()
 # From the scatter plot, we can visually group the various species.
 # Iris-Setosa generally have the smallest Petal Length (< 2cm) and Petal Width (estimated, <0.8cm)
 # Iris-Versicolor tend have Petal Width within(estimated, 1 to 1.5 cm) and Petal Length (estimated, 3 to 5 cm)
 # Iris-Virginica generally have the largest Petal Width (estimated, >1.5cm)and larger Petal Length (estimated, >4.8cm)
 
 # Question 4
-trainMap = x_train.pivot_table(index="Species", aggfunc="median")
+plt.figure()
+trainMap = ds.pivot_table(index="Species", aggfunc="median")
 sns.heatmap(trainMap, annot=True)
 plt.savefig('heatmap.jpg', format='jpg')
-plt.show()
+# plt.show()
 
 # 4a)
 # Positively correlated are features such as the Sepal width and Sepal Length
@@ -76,8 +72,33 @@ plt.show()
 
 # KNN Starts here :)
 
-#Normalize data
+# # Encode Data
+# label_encoder = LabelEncoder()
+# ds['Species'] = label_encoder.fit_transform(ds['Species'])
+#
+# # Normalize Data
+# nds = ds.copy()
+# columns_to_normalize = nds.columns.difference(['Species'])
+# for column in columns_to_normalize:
+#     nds[column] = nds[column] / nds[column].abs().max()
+#
+# # Decode Data (Used for printing)
+# nds['Species'] = label_encoder.inverse_transform(nds['Species'])
+
+# Standard Scaler
+nds = ds.copy()
+std_scale = StandardScaler()
+normalise_c = nds.columns.difference(['Species'])
+nds[normalise_c] = std_scale.fit_transform(nds[normalise_c])
+
+print(nds)
+
+# this will split the dataset into train and test (80/20)
+x_train, x_test = train_test_split(ds, test_size=0.2, train_size=0.8, random_state=0)
+# print("x_train: \n", x_train)
+# print("x_test: \n", x_test)
+# print("x_train.shape: ", x_train.shape)
+# print("x_test.shape: ", x_test.shape)
 
 
-
-#need to normalize data first!!!!!!!!!!!!!!!!
+# need to normalize data first!!!!!!!!!!!!!!!!
