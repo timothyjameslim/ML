@@ -91,14 +91,31 @@ std_scale = StandardScaler()
 normalise_c = nds.columns.difference(['Species'])
 nds[normalise_c] = std_scale.fit_transform(nds[normalise_c])
 
-print(nds)
+x = nds.drop(['Species'], axis=1)
+y = nds['Species']
+# print(nds)
 
 # this will split the dataset into train and test (80/20)
-x_train, x_test = train_test_split(ds, test_size=0.2, train_size=0.8, random_state=0)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, train_size=0.8, random_state=0)
 # print("x_train: \n", x_train)
 # print("x_test: \n", x_test)
 # print("x_train.shape: ", x_train.shape)
 # print("x_test.shape: ", x_test.shape)
 
+high_acc = 0.0
+nh = 0
+for n in range(1,11):
+    knn = KNeighborsClassifier(n_neighbors=n, weights='uniform', algorithm='auto', metric='euclidean')
+    knn.fit(x_train, y_train)
+    x_pre = knn.predict(x_test)
 
-# need to normalize data first!!!!!!!!!!!!!!!!
+    accuracy = knn.score(x_test, y_test)
+# print(f"Accuracy: {accuracy:.2f}, n_neighbour: {n}")
+    if accuracy > high_acc:
+        high_acc = accuracy
+        nh = n
+
+print(f"highest Accuracy: {high_acc:.2f}, n: {nh}")
+
+
+
