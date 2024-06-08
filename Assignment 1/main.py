@@ -1,9 +1,14 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import classification_report
+from sklearn import metrics
+from sklearn import svm
+
 
 # load the csv here (ds = dataset)
 ds = pd.read_csv("Iris_Assignment 1.csv", header=0, index_col=0)
@@ -72,19 +77,6 @@ plt.savefig('heatmap.jpg', format='jpg')
 
 # KNN Starts here :)
 
-# # Encode Data
-# label_encoder = LabelEncoder()
-# ds['Species'] = label_encoder.fit_transform(ds['Species'])
-#
-# # Normalize Data
-# nds = ds.copy()
-# columns_to_normalize = nds.columns.difference(['Species'])
-# for column in columns_to_normalize:
-#     nds[column] = nds[column] / nds[column].abs().max()
-#
-# # Decode Data (Used for printing)
-# nds['Species'] = label_encoder.inverse_transform(nds['Species'])
-
 # Standard Scaler
 nds = ds.copy()
 std_scale = StandardScaler()
@@ -97,25 +89,87 @@ y = nds['Species']
 
 # this will split the dataset into train and test (80/20)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, train_size=0.8, random_state=0)
-# print("x_train: \n", x_train)
-# print("x_test: \n", x_test)
-# print("x_train.shape: ", x_train.shape)
-# print("x_test.shape: ", x_test.shape)
 
-high_acc = 0.0
-nh = 0
-for n in range(1,11):
-    knn = KNeighborsClassifier(n_neighbors=n, weights='uniform', algorithm='auto', metric='euclidean')
-    knn.fit(x_train, y_train)
-    x_pre = knn.predict(x_test)
+# Euclidean KNN, is this the triangle guy?
 
-    accuracy = knn.score(x_test, y_test)
-# print(f"Accuracy: {accuracy:.2f}, n_neighbour: {n}")
-    if accuracy > high_acc:
-        high_acc = accuracy
-        nh = n
+knn1 = KNeighborsClassifier(n_neighbors=6, weights='uniform', algorithm='auto', metric='euclidean')
 
-print(f"highest Accuracy: {high_acc:.2f}, n: {nh}")
+# Manhattan's KNN, not a fan of KNN I much more prefer the fish market
 
+knn2 = KNeighborsClassifier(n_neighbors=3, weights='uniform', algorithm='auto', metric='manhattan')
 
+# Okay N-Fold Validation here we go!
+# I'm gonna play around with just the training data so using 80/20
 
+clf = (svm.SVC(kernel='linear', C=1))
+clf.fit(x_train, y_train)
+best_mean = 0.0
+bn = 0
+mean_acc = []
+n_range = range(2,11)
+print("--------------------------------------------------------")
+for n in n_range:
+    scores = cross_val_score(clf, x_train, y_train, cv=n, scoring='accuracy')
+    mean_score = scores.mean()
+    mean_acc.append(mean_score)
+
+    # print(f"Accuracy of {n}-Fold: {mean_score:.2f}")
+    if mean_score > best_mean:
+        best_mean = mean_score
+        bn = n
+print(f"\nN-Fold ------ Best N: {bn}, Best Accuracy: {best_mean:.2f}\n")
+print("--------------------------------------------------------")
+
+# It's time to plot the K-Value against the accuracy! WooHoo
+plt.figure()
+plt.plot(n_range, mean_acc, marker='o',  linestyle='-', color='r')
+plt.xlabel('Number of Neighbors')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs Number of Neighbors')
+plt.xticks(n_range)
+plt.grid(True)
+# plt.show()
+
+# Re-Evaluating this fella!
+knn1 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='euclidean')
+knn1.fit(x_train, y_train)
+y_pre1 = knn1.predict(x_test)
+accuracy1 = knn1.score(x_test, y_test)
+print(f"Accuracy: {accuracy1:.2f}, n_neighbour: {bn}\n")
+print(classification_report(y_test, y_pre1))
+wdata_euc = y_test.index[y_test != y_pre1]
+sdata_euc = ds.loc[wdata_euc]
+print("----------------Misclassified Flowers-------------------")
+print(sdata_euc)
+print("--------------------------------------------------------")
+
+# This is the re-evaluation of the manhattan version of knn!
+knn2 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='manhattan')
+knn2.fit(x_train, y_train)
+y_pre2 = knn2.predict(x_test)
+accuracy2 = knn2.score(x_test, y_test)
+print(f"Accuracy: {accuracy2:.2f}, n_neighbour: {bn}\n")
+print(classification_report(y_test, y_pre2))
+wdata_mat = y_test.index[y_test != y_pre2]
+sdata_mat = ds.loc[wdata_mat]
+print("----------------Misclassified Flowers-------------------")
+print(sdata_mat)
+print("--------------------------------------------------------")
+
+# Naive Bayes Section (Credits to MARC SOOOOOOOOO)
+
+gnb = GaussianNB()
+gnb.fit(x_train, y_train)
+
+y_pred = gnb.predict(x_test)
+accuracy = metrics.accuracy_score(y_test, y_pred) * 100
+print(f"\nAccuracy (in %): {accuracy:.2f}")
+
+print(classification_report(y_test, y_pred))
+print("--------------------------------------------------------")
+
+misclassified_indices = y_test.index[y_test != y_pred]
+misclassified_flowers = ds.loc[misclassified_indices]
+print("----------------Misclassified Flowers-------------------")
+print(misclassified_flowers)
+print("-------------------------END----------------------------")
