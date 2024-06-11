@@ -39,11 +39,8 @@ print(duplicates, "\n--------- The above duplicated data has been removed ------
 # remove the duplicated data
 ds.drop_duplicates(inplace=True)
 
-# this will split the dataset into train and test (80/20), analyse the train set
-x_split, y_split = train_test_split(ds, test_size=0.2, train_size=0.8, random_state=0)
-
 # Question 2
-x_split.boxplot()
+ds.boxplot()
 plt.savefig('boxplot.jpg', format='jpg')
 # plt.show()
 # 2a) boxplot plots the outliers as circles within the diagram.
@@ -52,7 +49,7 @@ plt.savefig('boxplot.jpg', format='jpg')
 # Question 3
 plt.figure()
 sns.set_style("ticks")
-sns.pairplot(x_split, hue="Species")
+sns.pairplot(ds, hue="Species")
 plt.savefig('scatter.jpg', format='jpg')
 # plt.show()
 # From the scatter plot, we can visually group the various species.
@@ -62,7 +59,7 @@ plt.savefig('scatter.jpg', format='jpg')
 
 # Question 4
 plt.figure()
-trainMap = x_split.pivot_table(index="Species", aggfunc="median")
+trainMap = ds.pivot_table(index="Species", aggfunc="median")
 sns.heatmap(trainMap, annot=True)
 plt.savefig('heatmap.jpg', format='jpg')
 # plt.show()
@@ -89,11 +86,6 @@ nds[normalise_c] = std_scale.fit_transform(nds[normalise_c])
 x = nds.drop(['Species'], axis=1)
 y = nds['Species']
 # print(nds)
-
-x_train = x_split.drop(['Species'], axis=1)
-y_train = x_split.drop(['Species'], axis=1)
-x_test = y_split(['Species'])
-y_test = y_split(['Species'])
 
 # this will split the dataset into train and test (80/20)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, train_size=0.8, random_state=0)
@@ -136,7 +128,7 @@ plt.ylabel('Accuracy')
 plt.title('Accuracy vs Number of Neighbors')
 plt.xticks(n_range)
 plt.grid(True)
-plt.show()
+#plt.show()
 
 # Re-Evaluating this fella!
 knn1 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='euclidean')
