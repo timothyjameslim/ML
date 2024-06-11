@@ -9,6 +9,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn import metrics
 from sklearn import svm
+import time
 
 
 # load the csv here (ds = dataset)
@@ -214,9 +215,13 @@ print("--------------------------------------------------------")
 # This is the re-evaluation of the manhattan version of knn!
 knn2 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='manhattan')
 knn2.fit(x_train, y_train)
+
+start_time = time.time()
 y_pre2 = knn2.predict(x_test)
+end_time = time.time()
+
 accuracy2 = knn2.score(x_test, y_test)
-print(f"Accuracy: {accuracy2:.2f}, n_neighbour: {bn}\n")
+print(f"Accuracy: {accuracy2:.2f}, n_neighbour: {bn}\n, time taken: {end_time - start_time}")
 print(classification_report(y_test, y_pre2))
 wdata_mat = y_test.index[y_test != y_pre2]
 sdata_mat = ds.loc[wdata_mat]
