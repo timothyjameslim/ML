@@ -25,10 +25,17 @@ for i in range(len(ds)):
         if pd.isnull(ds.loc[ds.index[i],j]):
             print(f"ID: '{ds.index[i]}' Column: '{j}' is blank")
             # This will print all the IDs with missing data
+print(ds.loc[[2,20]])
+
+# fill data with mode so prevent loss of data
+for column in ds.columns:
+    if pd.api.types.is_numeric_dtype(ds[column]):
+        ds[column] = ds.groupby('Species')[column].transform(lambda x: x.fillna(x.median()))
+print(ds.loc[[2,20]])
 
 # remove the missing data
-ds.dropna(inplace=True)
-print("\n--------- The above data with missing fields has been removed ---------\n")
+# ds.dropna(inplace=True)
+# print("\n--------- The above data with missing fields has been removed ---------\n")
 # I removed the data because the columns is data sensitive
 # if I filled it with other numbers it may affect the final result
 
@@ -130,7 +137,7 @@ plt.title('Accuracy vs Value of K (Euclidean)')
 plt.xticks(range(1,11))
 plt.grid(True)
 plt.savefig('AvK(Euclidean).jpg', format='jpg')
-plt.show()
+# plt.show()
 
 print(f"highest Accuracy (Euclidean): {high_acc:.2f}, K: {nh}")
 
@@ -162,7 +169,7 @@ plt.title('Accuracy vs Value of K (Manhattan)')
 plt.xticks(range(1,11))
 plt.grid(True)
 plt.savefig('AvK(Manhattan).jpg', format='jpg')
-plt.show()
+# plt.show()
 
 print(f"highest Accuracy (Manhattan): {high_acc:.2f}, K: {nh}")
 
@@ -197,36 +204,42 @@ plt.title('Accuracy vs Number of Neighbors (N-Fold)')
 plt.xticks(n_range)
 plt.grid(True)
 plt.savefig('AvN(N-Fold).jpg', format='jpg')
-plt.show()
+#plt.show()
 
 # Re-Evaluating this fella!
 knn1 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='euclidean')
 knn1.fit(x_train, y_train)
+start_time1 = time.time()
 y_pre1 = knn1.predict(x_test)
+end_time1 = time.time()
 accuracy1 = knn1.score(x_test, y_test)
-print(f"Accuracy: {accuracy1:.2f}, n_neighbour: {bn}\n")
+print(f"Accuracy: {accuracy1:.2f}, n_neighbour: {bn}, time taken: {(end_time1 - start_time1)*1000:.2f}ms\n")
+
 print(classification_report(y_test, y_pre1))
-wdata_euc = y_test.index[y_test != y_pre1]
-sdata_euc = ds.loc[wdata_euc]
-print("----------------Misclassified Flowers-------------------")
-print(sdata_euc)
+misclassified_indices1 = y_test.index[y_test != y_pre1]
+misclassified_flowers1 = ds.loc[misclassified_indices1].copy()
+misclassified_flowers1['True Label'] = y_test.loc[misclassified_indices1]
+misclassified_flowers1['Predicted Label'] = y_pre1[y_test.index.isin(misclassified_indices1)]
+print("-----------Misclassified Flowers (Euclidean)------------")
+print(misclassified_flowers1)
 print("--------------------------------------------------------")
 
 # This is the re-evaluation of the manhattan version of knn!
 knn2 = KNeighborsClassifier(n_neighbors=bn, weights='uniform', algorithm='auto', metric='manhattan')
 knn2.fit(x_train, y_train)
-
-start_time = time.time()
+start_time2 = time.time()
 y_pre2 = knn2.predict(x_test)
-end_time = time.time()
-
+end_time2 = time.time()
 accuracy2 = knn2.score(x_test, y_test)
-print(f"Accuracy: {accuracy2:.2f}, n_neighbour: {bn}\n, time taken: {end_time - start_time}")
+print(f"Accuracy: {accuracy2:.2f}, n_neighbour: {bn}\n, time taken: {(end_time2 - start_time2)*1000:.2f}ms\n")
+
 print(classification_report(y_test, y_pre2))
-wdata_mat = y_test.index[y_test != y_pre2]
-sdata_mat = ds.loc[wdata_mat]
-print("----------------Misclassified Flowers-------------------")
-print(sdata_mat)
+misclassified_indices2 = y_test.index[y_test != y_pre2]
+misclassified_flowers2 = ds.loc[misclassified_indices2].copy()
+misclassified_flowers2['True Label'] = y_test.loc[misclassified_indices2]
+misclassified_flowers2['Predicted Label'] = y_pre2[y_test.index.isin(misclassified_indices2)]
+print("-----------Misclassified Flowers (Manhattan)------------")
+print(misclassified_flowers2)
 print("--------------------------------------------------------")
 
 # Naive Bayes Section (Credits to MARC SOOOOOOOOO)
@@ -238,10 +251,12 @@ y_pred = gnb.predict(x_test)
 accuracy = metrics.accuracy_score(y_test, y_pred) * 100
 print(f"\nAccuracy (in %): {accuracy:.2f}")
 
+misclassified = (y_test != y_pred).sum()
+print("Number of misclassified flowers:", misclassified)
 print(classification_report(y_test, y_pred))
 
 misclassified_indices = y_test.index[y_test != y_pred]
-misclassified_flowers = ds.loc[misclassified_indices]
-print("----------------Misclassified Flowers-------------------")
+misclassified_flowers = ds.loc[misclassified_indices].copy()
+misclassified_flowers['True Label'] = y_test.loc[misclassified_indices]
+misclassified_flowers['Predicted Label'] = y_pred[y_test.index.isin(misclassified_indices)]
 print(misclassified_flowers)
-print("-------------------------END----------------------------")
