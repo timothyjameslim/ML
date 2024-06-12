@@ -30,7 +30,7 @@ print(ds.loc[[2,20]])
 # fill data with mode so prevent loss of data
 for column in ds.columns:
     if pd.api.types.is_numeric_dtype(ds[column]):
-        ds[column] = ds.groupby('Species')[column].transform(lambda x: x.fillna(x.median()))
+        ds[column] = ds.groupby('Species')[column].transform(lambda x: x.fillna(x.mode()))
 print(ds.loc[[2,20]])
 
 # remove the missing data
